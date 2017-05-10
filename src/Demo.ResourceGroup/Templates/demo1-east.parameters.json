@@ -1,0 +1,48 @@
+﻿{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "storageAccounts_name": {
+            "value": "kmxdemo1eaststorage"
+        },
+        "serverfarms_service_name": {
+            "value": "kmx-demo1-east-service"
+        },
+        "serverfarms_functions_name": {
+            "value": "kmx-demo1-east-functions"
+        },
+        "sites_service_name": {
+            "value": "kmx-demo1-east-service"
+        },
+        "sites_service_url": {
+            "value": "https://kmx-demo1-east-service.azurewebsites.net"
+        },
+        "sites_service_api_key": {
+            "value": ""
+        },
+        "sites_functions_name": {
+            "value": "kmx-demo1-east-functions"
+        },
+        "location_name": {
+            "value": "eastus"
+        },
+        "environment": {
+            "value": "dev"
+        },
+        "application_insights_app_name": {
+            "value": "kmx-demo1-insights"
+        },
+        "documentdb_name": {
+            "value": "kmx-demo1-docdb"
+        },
+        "shared_resource_group_name": {
+            "value": "kmx-demo1-central-shared"
+        },
+        "servicebus_resource_group_name": {
+            "value": "kmx-demo1-central-shared"
+        },
+        "servicebus_name": {
+            "value": "kmx-demo1-central-servicebus"
+        }
+    }
+}

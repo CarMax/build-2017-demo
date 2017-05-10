@@ -1,0 +1,231 @@
+﻿{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "storageAccounts_name": {
+            "type": "string"
+        },
+        "serverfarms_functions_name": {
+            "type": "string"
+        },
+        "serverfarms_service_name": {
+            "type": "string"
+        },
+        "sites_service_name": {
+            "type": "string"
+        },
+        "sites_service_url": {
+            "type": "string"
+        },
+        "sites_service_api_key": {
+            "type":  "string"
+        },
+        "sites_functions_name": {
+            "type": "string"
+        },
+        "location_name": {
+            "type": "string"
+        },
+        "environment": {
+            "type": "string"
+        },
+        "application_insights_app_name": {
+            "type": "string"
+        },
+        "documentdb_name": {
+            "type": "string"
+        },
+        "shared_resource_group_name": {
+            "type": "string"
+        },
+        "servicebus_resource_group_name": {
+            "type": "string"
+        },
+        "servicebus_name": {
+            "type": "string"
+        }
+    },
+    "variables": {
+        "serviceStagingSlotName": "service-staging",
+        "documentDbEndpoint": "[concat('https://',parameters('documentdb_name'),'.documents.azure.com:443/')]",
+        "serviceBusListenerPolicyName": "RootManageSharedAccessKey",
+        "application": "Vehicle API",
+        "team": "Platform Team"
+    },
+    "resources": [
+        {
+            "comments": "Storage Account",
+            "type": "Microsoft.Storage/storageAccounts",
+            "sku": {
+                "name": "Standard_LRS",
+                "tier": "Standard"
+            },
+            "kind": "Storage",
+            "name": "[parameters('storageAccounts_name')]",
+            "apiVersion": "2016-01-01",
+            "location": "[parameters('location_name')]",
+            "tags": {
+                "environment": "[parameters('environment')]",
+                "application": "[variables('application')]",
+                "team": "[variables('team')]"
+            },
+            "properties": {},
+            "resources": [],
+            "dependsOn": []
+        },
+        {
+            "comments": "App Service Plan - Functions",
+            "type": "Microsoft.Web/serverfarms",
+            "apiVersion": "2015-04-01",
+            "name": "[parameters('serverfarms_functions_name')]",
+            "location": "[resourceGroup().location]",
+            "tags": {
+                "environment": "[parameters('environment')]",
+                "application": "[variables('application')]",
+                "team": "[variables('team')]"
+            },
+            "properties": {
+                "name": "[parameters('serverfarms_functions_name')]",
+                "computeMode": "Dynamic",
+                "sku": "Dynamic"
+            }
+        },
+        {
+            "comments": "App Service - Functions",
+            "apiVersion": "2015-08-01",
+            "type": "Microsoft.Web/sites",
+            "name": "[parameters('sites_functions_name')]",
+            "location": "[parameters('location_name')]",
+            "tags": {
+                "environment": "[parameters('environment')]",
+                "application": "[variables('application')]",
+                "team": "[variables('team')]"
+            },
+            "kind": "functionapp",
+            "properties": {
+                "name": "[parameters('sites_functions_name')]",
+                "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', parameters('serverfarms_functions_name'))]"
+            },
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/serverfarms', parameters('serverfarms_functions_name'))]",
+                "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccounts_name'))]"
+            ],
+            "resources": [
+                {
+                    "comments": "App Service - Functions",
+                    "apiVersion": "2015-08-01",
+                    "name": "appsettings",
+                    "type": "config",
+                    "dependsOn": [
+                        "[resourceId('Microsoft.Web/sites', parameters('sites_functions_name'))]",
+                        "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccounts_name'))]"
+                    ],
+                    "properties": {
+                        "AzureWebJobsStorage": "[concat('DefaultEndpointsProtocol=https;AccountName=',parameters('storageAccounts_name'),';AccountKey=',listkeys(resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccounts_name')), '2015-05-01-preview').key1,';')]",
+                        "AzureWebJobsDashboard": "[concat('DefaultEndpointsProtocol=https;AccountName=',parameters('storageAccounts_name'),';AccountKey=',listkeys(resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccounts_name')), '2015-05-01-preview').key1,';')]",
+                        "FUNCTIONS_EXTENSION_VERSION": "latest",
+                        "APPINSIGHTS_INSTRUMENTATIONKEY": "[reference(resourceId(parameters('shared_resource_group_name'),'Microsoft.Insights/components', parameters('application_insights_app_name')), '2014-04-01').InstrumentationKey]",
+                        "VehicleDocumentDbUri": "[variables('documentDbEndpoint')]",
+                        "VehicleDocumentDbKey": "[listKeys(resourceId(parameters('shared_resource_group_name'),'Microsoft.DocumentDb/databaseAccounts', parameters('documentdb_name')), '2015-04-08').primaryMasterKey]",
+                        "VehicleDocumentDbConnectionString": "[concat('AccountEndpoint=',variables('documentDbEndpoint'),';AccountKey=',listKeys(resourceId(parameters('shared_resource_group_name'),'Microsoft.DocumentDb/databaseAccounts', parameters('documentdb_name')), '2015-04-08').primaryMasterKey,';')]",
+                        "VehicleServiceBusConnectionString": "[listKeys(resourceId(parameters('servicebus_resource_group_name'),'Microsoft.ServiceBus/namespaces/AuthorizationRules',parameters('servicebus_name'),variables('serviceBusListenerPolicyName')),'2015-08-01').primaryConnectionString]",
+                        "WEBSITE_CONTENTSHARE": "[parameters('sites_functions_name')]",
+                        "WEBSITE_CONTENTAZUREFILECONNECTIONSTRING": "[concat('DefaultEndpointsProtocol=https;AccountName=',parameters('storageAccounts_name'),';AccountKey=',listkeys(resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccounts_name')), '2015-05-01-preview').key1,';')]"
+                    }
+                }
+            ]
+        },
+        {
+            "comments": "App Service Plan - Service",
+            "type": "Microsoft.Web/serverfarms",
+            "sku": {
+                "name": "S1",
+                "tier": "Standard",
+                "size": "S1",
+                "family": "S",
+                "capacity": 1
+            },
+            "kind": "app",
+            "name": "[parameters('serverfarms_service_name')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/serverfarms', parameters('serverfarms_functions_name'))]"
+            ],
+            "apiVersion": "2015-08-01",
+            "location": "[resourceGroup().location]",
+            "tags": {
+                "environment": "[parameters('environment')]",
+                "application": "[variables('application')]",
+                "team": "[variables('team')]"
+            },
+            "properties": {
+                "name": "[parameters('serverfarms_service_name')]",
+                "numberOfWorkers": 1
+            }
+        },
+        {
+            "comments": "App Service - Vehicle Service",
+            "type": "Microsoft.Web/sites",
+            "kind": "api",
+            "name": "[parameters('sites_service_name')]",
+            "apiVersion": "2015-08-01",
+            "location": "[resourceGroup().location]",
+            "tags": {
+                "environment": "[parameters('environment')]",
+                "application": "[variables('application')]",
+                "team": "[variables('team')]"
+            },
+            "properties": {
+                "name": "[parameters('sites_service_name')]",
+                "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', parameters('serverfarms_service_name'))]",
+                "siteConfig": {
+                    "alwaysOn": true,
+                    "defaultDocuments": []
+                }
+            },
+            "resources": [
+                {
+                    "apiVersion": "2015-08-01",
+                    "name": "web",
+                    "type": "config",
+                    "dependsOn": [
+                        "[resourceId('Microsoft.Web/Sites', parameters('sites_service_name'))]"
+                    ],
+                    "properties": {
+                        "phpVersion": "off",
+                        "use32BitWorkerProcess": false
+                    }
+                },
+                {
+                    "apiVersion": "2015-08-01",
+                    "name": "[variables('serviceStagingSlotName')]",
+                    "type": "slots",
+                    "location": "[resourceGroup().location]",
+                    "dependsOn": [
+                        "[resourceId('Microsoft.Web/Sites', parameters('sites_service_name'))]"
+                    ],
+                    "properties": { },
+                    "resources": []
+                },
+                {
+                    "comments": "App Service - Vehicle Service",
+                    "apiVersion": "2015-08-01",
+                    "name": "appsettings",
+                    "type": "config",
+                    "dependsOn": [
+                        "[resourceId('Microsoft.Web/sites', parameters('sites_service_name'))]"
+                    ],
+                    "properties": {
+                        "APPINSIGHTS_INSTRUMENTATIONKEY": "[reference(resourceId(parameters('shared_resource_group_name'),'Microsoft.Insights/components', parameters('application_insights_app_name')), '2014-04-01').InstrumentationKey]",
+                        "documentDBPrimaryKey": "[listKeys(resourceId(parameters('shared_resource_group_name'),'Microsoft.DocumentDb/databaseAccounts', parameters('documentdb_name')), '2015-04-08').primaryMasterKey]",
+                        "documentDBUri": "[variables('documentDbEndpoint')]",
+                        "documentDBVehiclesCollectionId": "vehicles",
+                        "documentDBVehiclesDatabase": "vehicles"
+                    }
+                }
+            ],
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/serverfarms', parameters('serverfarms_service_name'))]"
+            ]
+        }
+    ]
+}

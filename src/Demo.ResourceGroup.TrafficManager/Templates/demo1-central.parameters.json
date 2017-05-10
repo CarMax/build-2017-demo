@@ -1,0 +1,24 @@
+﻿{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "trafficManagerProfiles_service_name": {
+            "value": "kmx-demo1-service"
+        },
+        "resourceGroupNameEast": {
+            "value": "kmx-demo1-east"
+        },
+        "resourceGroupNameWest": {
+            "value": "kmx-demo1-west"
+        },
+        "resourceName_service_east": {
+            "value": "kmx-demo1-east-service"
+        },
+        "resourceName_service_west": {
+            "value": "kmx-demo1-west-service"
+        },
+        "environment": {
+            "value": "dev"
+        }
+    }
+}

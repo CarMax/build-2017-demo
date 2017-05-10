@@ -1,0 +1,36 @@
+﻿{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "databaseAccounts_name": {
+            "value": "kmx-demo1-docdb"
+        },
+        "writeRegion": {
+            "value": "East US"
+        },
+        "consistencyLevel": {
+            "value": "Session"
+        },
+        "maxStalenessPrefix": {
+            "value": 100
+        },
+        "maxIntervalInSeconds": {
+            "value": 5
+        },
+        "serviceBusNamespaceName": {
+            "value": "kmx-demo1-central-servicebus" 
+        },
+        "applicationInsightsName": {
+            "value": "kmx-demo1-insights"
+        },
+        "applicationInsightsLocation": {
+            "value": "southcentralus"
+        },
+        "environment": {
+            "value": "dev"
+        },
+        "storageAccountName": {
+            "value": "kmxdemo1storage"
+        }
+    }
+}

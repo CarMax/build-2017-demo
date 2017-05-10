@@ -1,0 +1,87 @@
+﻿{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "trafficManagerProfiles_service_name": {
+            "type": "string"
+        },
+        "subscriptionId": {
+            "type": "string"
+        },
+        "resourceGroupNameEast": {
+            "type": "string"
+        },
+        "resourceGroupNameWest": {
+            "type": "string"
+        },
+        "resourceName_service_east": {
+            "type": "string"
+        },
+        "resourceName_service_west": {
+            "type": "string"
+        },
+        "environment": {
+            "type": "string"
+        }
+    },
+    "variables": {
+        "trafficManagerProfiles_service_east_targetResourceId": "[concat('/subscriptions/', parameters('subscriptionId'), '/resourceGroups/', parameters('resourceGroupNameEast'), '/providers/Microsoft.Web/sites/', parameters('resourceName_service_east'))]",
+        "trafficManagerProfiles_service_west_targetResourceId": "[concat('/subscriptions/', parameters('subscriptionId'), '/resourceGroups/', parameters('resourceGroupNameWest'), '/providers/Microsoft.Web/sites/', parameters('resourceName_service_west'))]",
+        "application": "Vehicle API",
+        "team": "Platform Team"
+    },
+    "resources": [
+        {
+            "comments": "Traffic Manager - Service",
+            "type": "Microsoft.Network/trafficManagerProfiles",
+            "name": "[parameters('trafficManagerProfiles_service_name')]",
+            "apiVersion": "2015-11-01",
+            "location": "global",
+            "tags": {
+                "environment": "[parameters('environment')]",
+                "application": "[variables('application')]",
+                "team": "[variables('team')]"
+            },
+            "properties": {
+                "profileStatus": "Enabled",
+                "trafficRoutingMethod": "Performance",
+                "dnsConfig": {
+                    "relativeName": "[parameters('trafficManagerProfiles_service_name')]",
+                    "fqdn": "[concat(parameters('trafficManagerProfiles_service_name'),'.trafficmanager.net')]",
+                    "ttl": 300
+                },
+                "monitorConfig": {
+                    "protocol": "HTTPS",
+                    "port": 443,
+                    "path": "/swagger/ui/index"
+                },
+                "endpoints": [
+                    {
+                        "name": "east",
+                        "type": "Microsoft.Network/trafficManagerProfiles/azureEndpoints",
+                        "properties": {
+                            "endpointStatus": "Enabled",
+                            "targetResourceId": "[variables('trafficManagerProfiles_service_east_targetResourceId')]",
+                            "target": "[concat(parameters('trafficManagerProfiles_service_name'),'-east.azurewebsites.net')]",
+                            "weight": 1,
+                            "priority": 1,
+                            "endpointLocation": "East US"
+                        }
+                    },
+                    {
+                        "name": "west",
+                        "type": "Microsoft.Network/trafficManagerProfiles/azureEndpoints",
+                        "properties": {
+                            "endpointStatus": "Enabled",
+                            "targetResourceId": "[variables('trafficManagerProfiles_service_west_targetResourceId')]",
+                            "target": "[concat(parameters('trafficManagerProfiles_service_name'),'-west.azurewebsites.net')]",
+                            "weight": 1,
+                            "priority": 2,
+                            "endpointLocation": "West US"
+                        }
+                    }
+                ]
+            }
+        }
+    ]
+}
