@@ -137,8 +137,8 @@
             "Prefix": "[concat('Vehicle ', parameters('environment'))]",
             "DeadLetterMetricsName": "vehicle-svc-details-updates Dead Letter Depth",
             "DepthMetricsName": "vehicle-svc-details-updates Depth",
-            "EmailAddresses": [ "dc8b5c08.carmax.onmicrosoft.com@amer.teams.ms" ],
-            "WebhooksUrl": "https://outlook.office.com/webhook/1c8ecc9c-5423-4de7-8cd2-2e716729f6f8@ed38c4bc-a204-4511-8009-34c0612c882a/IncomingWebhook/c06651810fbe4fcabbe5e4eca9bf1938/93286b18-3c8f-45fb-959f-8fdc7cfa3b0b"
+            "EmailAddresses": [ "<your-email-id-goes-here>" ],
+            "WebhooksUrl": ""
         },
         "appInsightsAlertsNotification": [
             {
